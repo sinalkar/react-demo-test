@@ -10,3 +10,8 @@ npm install --save prop-types
 #Deploy Build
 yarn build
 netlify deploy
+
+
+
+#Install axios 
+npm install axios --save

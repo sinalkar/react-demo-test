@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
-import Aux from '../hoc/Aux';
+import Aux from '../hoc/Aux/Aux';
 import Services from '../components/Services/Services';
 import Controls from '../components/Services/Controls/Controls';
 import Modal from '../components/UI/Modal/Modal';
 import OrderSummary from '../components/Services/OrderSummary/OrderSummary';
+import axios from '../axios-order';
+import Spinner from '../components/UI/Spinner/Spinner';
 
 const PRICEBOOK = {
     salad: 0.5,
@@ -23,7 +25,8 @@ class CustomerPortal extends Component {
         },
         totalPrice : 0,
         purchasable:false,
-        purchasing:false
+        purchasing:false,
+        loading:false
     };
 
     purchaseHandler = () =>{
@@ -35,7 +38,30 @@ class CustomerPortal extends Component {
     }
 
     purchaseContinueHandler = () => {
-        alert("You have purchase successfully!");
+      //  alert("You have purchase successfully!");
+       this.setState({loading:true});
+       const order ={
+           ingredients:this.state.ingredients,
+           totalPrice:this.state.totalPrice,
+           customer:{
+               name:'Sanjay Sinalkar',
+               address:{
+                    street:'Test airoli',
+                    zipCode:'400708',
+                    country:'India'
+               },
+               email:'test@joister.net'  
+           },
+           deliveryMethod:'fastest'
+       }
+
+       axios.post('orders.json',order)
+            .then(response => {
+                this.setState({loading:false,purchasing:false});
+            })
+            .catch(error => {
+                this.setState({loading:false,purchasing:false});
+            });
     }
 
     updatePurchasable = (ingredients) => {
@@ -88,17 +114,25 @@ class CustomerPortal extends Component {
             disabledInfo[key] = disabledInfo[key] <= 0;
         }
 
+        let orderSummary = <OrderSummary 
+        price={this.state.totalPrice}
+        ingredients={this.state.ingredients}
+        purchaseCanceled={this.purchaseClosedHandler}
+        purchaseContinueHandler={this.purchaseContinueHandler}
+        />;
+
+        if(this.state.loading){
+            orderSummary = <Spinner/>;
+        }
+
         return (
             <Aux>
                 <Modal 
                 show={this.state.purchasing}
                 modelClosed={this.purchaseClosedHandler}
-                ><OrderSummary 
-                price={this.state.totalPrice}
-                ingredients={this.state.ingredients}
-                purchaseCanceled={this.purchaseClosedHandler}
-                purchaseContinueHandler={this.purchaseContinueHandler}
-                /></Modal>
+                >
+                    {orderSummary}
+                </Modal>
                 <Services ingredients={this.state.ingredients} />
                 <Controls 
                 ingredientAdded={this.addIngredientsHandler}
